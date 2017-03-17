@@ -41,6 +41,13 @@ REM set ZEPPELIN_INTERPRETER_LOCALREPO         REM Local repository for interpre
 REM set ZEPPELIN_NOTEBOOK_STORAGE		REM Refers to pluggable notebook storage class, can have two classes simultaneously with a sync between them (e.g. local and remote).
 REM set ZEPPELIN_NOTEBOOK_ONE_WAY_SYNC		REM If there are multiple notebook storages, should we treat the first one as the only source of truth?
 
+REM Maven Frontend Plugin Proxy
+REM export ZEPPELIN_PROXY_FOR_NODE_INSTALLER    REM Proxy for node installer
+REM export ZEPPELIN_NON_PROXY_HOSTS_FOR_NODE_INSTALLER  REM Non proxy hosts for node installer
+REM export ZEPPELIN_PROXY_FOR_NPM_INSTALLER REM Proxy for npm installer
+REM export ZEPPELIN_NON_PROXY_HOSTS_FOR_NPM_INSTALLER   REM Non proxy hosts for npm installer
+REM export ZEPPELIN_PROXY_FOR_NPM_RUNNER    REM Proxy for npm runner
+REM export ZEPPELIN_NON_PROXY_HOSTS_FOR_NPM_RUNNER  REM Non proxy hosts for npm runner
 
 REM Spark interpreter configuration
 

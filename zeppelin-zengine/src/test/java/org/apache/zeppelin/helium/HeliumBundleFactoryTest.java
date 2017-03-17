@@ -20,9 +20,11 @@ import com.github.eirslett.maven.plugins.frontend.lib.InstallationException;
 import com.github.eirslett.maven.plugins.frontend.lib.TaskRunnerException;
 import com.google.common.io.Resources;
 import org.apache.commons.io.FileUtils;
+import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +37,7 @@ import static org.junit.Assert.*;
 public class HeliumBundleFactoryTest {
   private File tmpDir;
   private HeliumBundleFactory hbf;
+private ZeppelinConfiguration conf;
 
   @Before
   public void setUp() throws InstallationException, TaskRunnerException {
@@ -45,11 +48,12 @@ public class HeliumBundleFactoryTest {
     URL res = Resources.getResource("helium/webpack.config.js");
     String resDir = new File(res.getFile()).getParent();
     File moduleDir = new File(resDir + "/../../../../zeppelin-web/src/app/");
-
+    conf = new ZeppelinConfiguration();
     hbf = new HeliumBundleFactory(tmpDir,
         new File(moduleDir, "tabledata"),
         new File(moduleDir, "visualization"),
-        new File(moduleDir, "spell"));
+        new File(moduleDir, "spell"),
+            conf);
   }
 
   @After

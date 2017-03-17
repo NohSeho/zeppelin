@@ -68,7 +68,6 @@ public class ZeppelinConfiguration extends XMLConfiguration {
         throw new RuntimeException("Unsupported VarType");
       }
     }
-
   }
 
 
@@ -108,7 +107,7 @@ public class ZeppelinConfiguration extends XMLConfiguration {
         conf = new ZeppelinConfiguration();
       }
     }
-    
+
     LOG.info("Server Host: " + conf.getServerAddress());
     if (conf.useSsl() == false) {
       LOG.info("Server Port: " + conf.getServerPort());
@@ -352,10 +351,22 @@ public class ZeppelinConfiguration extends XMLConfiguration {
     }
   }
 
+  public String getProxyForNodeInstaller() {
+    return getString(ConfVars.ZEPPELIN_PROXY_FOR_NODE_INSTALLER);
+  }
+
+  public String getProxyForNpmInstaller() {
+    return getString(ConfVars.ZEPPELIN_PROXY_FOR_NPM_INSTALLER);
+  }
+
+  public String getProxyForNpmRunner() {
+    return getString(ConfVars.ZEPPELIN_PROXY_FOR_NPM_RUNNER);
+  }
+
   public String getNotebookDir() {
     return getString(ConfVars.ZEPPELIN_NOTEBOOK_DIR);
   }
-  
+
   public String getUser() {
     return getString(ConfVars.ZEPPELIN_NOTEBOOK_S3_USER);
   }
@@ -363,7 +374,7 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   public String getBucketName() {
     return getString(ConfVars.ZEPPELIN_NOTEBOOK_S3_BUCKET);
   }
-  
+
   public String getEndpoint() {
     return getString(ConfVars.ZEPPELIN_NOTEBOOK_S3_ENDPOINT);
   }
@@ -375,7 +386,7 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   public String getS3KMSKeyRegion() {
     return getString(ConfVars.ZEPPELIN_NOTEBOOK_S3_KMS_KEY_REGION);
   }
-  
+
   public String getS3EncryptionMaterialsProviderClass() {
     return getString(ConfVars.ZEPPELIN_NOTEBOOK_S3_EMP);
   }
@@ -464,7 +475,7 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   public boolean isWindowsPath(String path){
     return path.matches("^[A-Za-z]:\\\\.*");
   }
-  
+
   public boolean isAnonymousAllowed() {
     return getBoolean(ConfVars.ZEPPELIN_ANONYMOUS_ALLOWED);
   }
@@ -472,7 +483,7 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   public boolean isNotebokPublic() {
     return getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_PUBLIC);
   }
-  
+
   public String getConfDir() {
     return getString(ConfVars.ZEPPELIN_CONF_DIR);
   }
@@ -633,7 +644,14 @@ public class ZeppelinConfiguration extends XMLConfiguration {
     ZEPPELIN_ANONYMOUS_ALLOWED("zeppelin.anonymous.allowed", true),
     ZEPPELIN_CREDENTIALS_PERSIST("zeppelin.credentials.persist", true),
     ZEPPELIN_WEBSOCKET_MAX_TEXT_MESSAGE_SIZE("zeppelin.websocket.max.text.message.size", "1024000"),
-    ZEPPELIN_SERVER_DEFAULT_DIR_ALLOWED("zeppelin.server.default.dir.allowed", false);
+    ZEPPELIN_SERVER_DEFAULT_DIR_ALLOWED("zeppelin.server.default.dir.allowed", false),
+    ZEPPELIN_PROXY_FOR_NODE_INSTALLER("zeppelin.proxy.installer.node", null),
+    ZEPPELIN_NON_PROXY_HOSTS_FOR_NODE_INSTALLER("zeppelin.proxy.nonProxyHosts.installer.node",
+            null),
+    ZEPPELIN_PROXY_FOR_NPM_INSTALLER("zeppelin.proxy.installer.npm", null),
+    ZEPPELIN_NON_PROXY_HOSTS_FOR_NPM_INSTALLER("zeppelin.proxy.nonProxyHosts.installer.npm", null),
+    ZEPPELIN_PROXY_FOR_NPM_RUNNER("zeppelin.proxy.runner.npm", null),
+    ZEPPELIN_NON_PROXY_HOSTS_FOR_NPM_RUNNER("zeppelin.proxy.nonProxyHosts.runner.npm", null);
 
     private String varName;
     @SuppressWarnings("rawtypes")

@@ -47,6 +47,14 @@
 # export ZEPPELIN_NOTEBOOK_ONE_WAY_SYNC	# If there are multiple notebook storages, should we treat the first one as the only source of truth?
 # export ZEPPELIN_NOTEBOOK_PUBLIC   # Make notebook public by default when created, private otherwise
 
+#### Maven Frontend Plugin Proxy ###
+# export ZEPPELIN_PROXY_FOR_NODE_INSTALLER  # Proxy for node installer
+# export ZEPPELIN_NON_PROXY_HOSTS_FOR_NODE_INSTALLER    # Non proxy hosts for node installer
+# export ZEPPELIN_PROXY_FOR_NPM_INSTALLER   # Proxy for npm installer
+# export ZEPPELIN_NON_PROXY_HOSTS_FOR_NPM_INSTALLER # Non proxy hosts for npm installer
+# export ZEPPELIN_PROXY_FOR_NPM_RUNNER  # Proxy for npm runner
+# export ZEPPELIN_NON_PROXY_HOSTS_FOR_NPM_RUNNER    # Non proxy hosts for npm runner
+
 #### Spark interpreter configuration ####
 
 ## Use provided spark installation ##

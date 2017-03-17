@@ -26,12 +26,19 @@ import org.apache.log4j.PatternLayout;
 import org.apache.log4j.WriterAppender;
 import org.apache.log4j.spi.Filter;
 import org.apache.log4j.spi.LoggingEvent;
+import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
+
+import static org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars.ZEPPELIN_NON_PROXY_HOSTS_FOR_NODE_INSTALLER;
+import static org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars.ZEPPELIN_NON_PROXY_HOSTS_FOR_NPM_INSTALLER;
+import static org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars.ZEPPELIN_NON_PROXY_HOSTS_FOR_NPM_RUNNER;
 
 /**
  * Load helium visualization & spell
@@ -56,6 +63,7 @@ public class HeliumBundleFactory {
   private File visualizationModulePath;
   private File spellModulePath;
   private Gson gson;
+  private ZeppelinConfiguration conf;
 
   String bundleCacheKey = "";
   File currentCacheBundle;
@@ -66,21 +74,24 @@ public class HeliumBundleFactory {
       File moduleDownloadPath,
       File tabledataModulePath,
       File visualizationModulePath,
-      File spellModulePath) throws TaskRunnerException {
-    this(moduleDownloadPath);
+      File spellModulePath,
+      ZeppelinConfiguration conf) throws TaskRunnerException {
+    this(moduleDownloadPath, conf);
     this.tabledataModulePath = tabledataModulePath;
     this.visualizationModulePath = visualizationModulePath;
     this.spellModulePath = spellModulePath;
   }
 
-  public HeliumBundleFactory(File moduleDownloadPath) throws TaskRunnerException {
+  public HeliumBundleFactory(File moduleDownloadPath, ZeppelinConfiguration conf)
+      throws TaskRunnerException {
     this.workingDirectory = new File(moduleDownloadPath, HELIUM_LOCAL_REPO);
     File installDirectory = workingDirectory;
 
     frontEndPluginFactory = new FrontendPluginFactory(
-        workingDirectory, installDirectory);
+            workingDirectory, installDirectory);
 
     currentCacheBundle = new File(workingDirectory, HELIUM_BUNDLE_CACHE);
+    this.conf = conf;
     gson = new Gson();
     installNodeAndNpm();
     configureLogger();
@@ -88,11 +99,12 @@ public class HeliumBundleFactory {
 
   private void installNodeAndNpm() {
     try {
-      NPMInstaller npmInstaller = frontEndPluginFactory.getNPMInstaller(getProxyConfig());
+      NPMInstaller npmInstaller = frontEndPluginFactory.getNPMInstaller(getProxyForNpmInstaller());
       npmInstaller.setNpmVersion(NPM_VERSION);
       npmInstaller.install();
 
-      NodeInstaller nodeInstaller = frontEndPluginFactory.getNodeInstaller(getProxyConfig());
+      NodeInstaller nodeInstaller = frontEndPluginFactory.getNodeInstaller(
+              getProxyForNodeInstaller());
       nodeInstaller.setNodeVersion(NODE_VERSION);
       nodeInstaller.install();
     } catch (InstallationException e) {
@@ -100,9 +112,88 @@ public class HeliumBundleFactory {
     }
   }
 
-  private ProxyConfig getProxyConfig() {
-    List<ProxyConfig.Proxy> proxy = new LinkedList<>();
-    return new ProxyConfig(proxy);
+  private ProxyConfig getProxyForNodeInstaller() {
+    try {
+      List<ProxyConfig.Proxy> proxy = new LinkedList<>();
+      URI proxyUri = new URI(conf.getProxyForNodeInstaller());
+      ProxyConfig.Proxy proxyConfig = generateProxyConfig("ZEPPELIN-PROXY-NODE-INSTALLER",
+              proxyUri);
+      proxy.add(proxyConfig);
+      return new ProxyConfig(proxy);
+    } catch (URISyntaxException ex) {
+      logger.error(ex.getMessage(), ex);
+      return null;
+    }
+  }
+
+  private ProxyConfig getProxyForNpmInstaller() {
+    try {
+      List<ProxyConfig.Proxy> proxy = new LinkedList<>();
+      URI proxyUri = new URI(conf.getProxyForNpmInstaller());
+      ProxyConfig.Proxy proxyConfig = generateProxyConfig("ZEPPELIN-PROXY-NPM-INSTALLER", proxyUri);
+      proxy.add(proxyConfig);
+      return new ProxyConfig(proxy);
+    } catch (URISyntaxException ex) {
+      logger.error(ex.getMessage(), ex);
+      return null;
+    }
+  }
+
+  private ProxyConfig getProxyForNpmRunner() {
+    try {
+      List<ProxyConfig.Proxy> proxy = new LinkedList<>();
+      URI proxyUri = new URI(conf.getProxyForNpmRunner());
+      ProxyConfig.Proxy proxyConfig = generateProxyConfig("ZEPPELIN-PROXY-NPM-RUNNER", proxyUri);
+      proxy.add(proxyConfig);
+      return new ProxyConfig(proxy);
+    } catch (URISyntaxException ex) {
+      logger.error(ex.getMessage(), ex);
+      return null;
+    }
+  }
+
+  private ProxyConfig.Proxy generateProxyConfig(String proxyId, URI uri) {
+    try {
+      String protocol = null, host = null, username = null, password = null, nonProxyHosts = null;
+      int port = 80;
+
+      protocol = uri.getScheme();
+      host = uri.getHost();
+      port = uri.getPort();
+      if (uri.getUserInfo() != null) {
+        String[] authority = uri.getUserInfo().split(":");
+
+        if (authority.length == 2) {
+          username = authority[0];
+          password = authority[1];
+        } else if (authority.length == 1) {
+          username = authority[0];
+        }
+      }
+
+      switch (proxyId) {
+          case "ZEPPELIN-PROXY-NODE-INSTALLER":
+            nonProxyHosts = conf.getString(
+                    ZEPPELIN_NON_PROXY_HOSTS_FOR_NODE_INSTALLER);
+            break;
+
+          case "ZEPPELIN-PROXY-NPM-INSTALLER":
+            nonProxyHosts = conf.getString(
+                    ZEPPELIN_NON_PROXY_HOSTS_FOR_NPM_INSTALLER);
+            break;
+
+          case "ZEPPELIN-PROXY-NPM-RUNNER":
+            nonProxyHosts = conf.getString(
+                    ZEPPELIN_NON_PROXY_HOSTS_FOR_NPM_RUNNER);
+            break;
+      }
+
+      return new ProxyConfig.Proxy(proxyId, protocol, host, port,
+              username, password, nonProxyHosts);
+    } catch (Exception ex) {
+      logger.error(ex.getMessage(), ex);
+      return null;
+    }
   }
 
   public File buildBundle(List<HeliumPackage> pkgs) throws IOException {
@@ -393,7 +484,8 @@ public class HeliumBundleFactory {
   }
 
   private void npmCommand(String args, Map<String, String> env) throws TaskRunnerException {
-    NpmRunner npm = frontEndPluginFactory.getNpmRunner(getProxyConfig(), DEFAULT_NPM_REGISTRY_URL);
+    NpmRunner npm = frontEndPluginFactory.getNpmRunner(getProxyForNpmRunner(),
+            DEFAULT_NPM_REGISTRY_URL);
 
     npm.execute(args, env);
   }
